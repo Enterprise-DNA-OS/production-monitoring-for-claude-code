@@ -308,14 +308,14 @@ group by m.code, m.id, ct.code, ct.name, ct.frequency, ct.id;
 -- What needs a person. One row per item; `due` orders the list.
 create view attention as
 select 'unexplained stops' as item, machine || ' ' || run_date || ' ' || shift as what,
-       count(*) || ' stops, ' || sum(minutes) || ' min with no reason' as why, run_date as due
+       count(*) || case when count(*) = 1 then ' stop, ' else ' stops, ' end || sum(minutes)::float8 || ' min with no reason' as why, run_date as due
 from stop_detail where reason = '(no reason)' and run_date > current_date - 7
 group by machine, run_date, shift
 union all
 select 'OEE under target', machine, 'OEE ' || round(oee * 100) || '% last 7 days against ' || round(target_oee * 100) || '%', current_date
 from machine_oee_7d where runs > 0 and oee < target_oee
 union all
-select 'repeat breakdown', machine || ' ' || reason, count(*) || ' stops, ' || sum(minutes) || ' min in 7 days', max(run_date)
+select 'repeat breakdown', machine || ' ' || reason, count(*) || ' stops, ' || sum(minutes)::float8 || ' min in 7 days', max(run_date)
 from stop_detail where loss = 'breakdown' and run_date > current_date - 7
 group by machine, reason having count(*) >= (select coalesce(max(value::int), 3) from settings where key = 'repeat_breakdown_count')
 union all
