@@ -1,0 +1,3 @@
+machine,date,shift,product,total_count,crew
+FL-1,2026-11-02,D,TRAY-500,10200,Crew A
+FL-1,2026-11-02,A,TRAY-1K,8800,Crew B

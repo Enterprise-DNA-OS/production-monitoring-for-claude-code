@@ -1,14 +1,31 @@
 [
   {
     "name": "week",
-    "title": "This week",
-    "subtitle": "Production Monitoring for Claude Code: what needs attention, rendered by npm run view",
+    "title": "Production: this week",
+    "subtitle": "What needs a person, OEE by machine and the open actions",
     "sections": [
-      {
-        "title": "Needs attention",
-        "note": "TODO(author): point this at the industry's attention view (overdue, stuck, quiet).",
-        "sql": "select 'replace me' as item, 'TODO(author)' as why"
-      }
+      { "title": "Needs attention", "sql": "select item, what, why, due from attention order by due, item" },
+      { "title": "OEE by machine, last 7 days", "sql": "select machine, name, runs, round(availability * 100, 1) as availability_pct, round(performance * 100, 1) as performance_pct, round(quality * 100, 1) as quality_pct, round(oee * 100, 1) as oee_pct, round(target_oee * 100) as target_pct from machine_oee_7d order by oee nulls last", "note": "OEE is good units at ideal speed over planned production time. Planned stops (breaks, planned maintenance, no orders) are not counted against it." },
+      { "title": "Open improvement actions", "sql": "select a.code, a.title, m.code as machine, a.owner, a.due_on from actions a left join machines m on m.id = a.machine_id where a.status = 'open' order by a.due_on nulls last" }
+    ]
+  },
+  {
+    "name": "losses",
+    "title": "Production losses",
+    "subtitle": "Where the time and the product go: stops, changeovers, speed and rejects, last 28 days",
+    "sections": [
+      { "title": "Downtime by reason", "sql": "select reason, reason_name, loss, stops, minutes, pct, cumulative_pct from stop_pareto", "note": "Fix the reasons at the top first: together they are most of the lost time." },
+      { "title": "Changeovers by product pair", "sql": "select machine, from_product, to_product, count(*)::int as times, round(avg(minutes), 1) as avg_min, min(minutes) as best_min from changeovers where run_date > current_date - 28 group by machine, from_product, to_product order by avg_min desc" },
+      { "title": "Rejects by reason", "sql": "select o.machine, sr.name as reason, sum(x.qty)::int as units, o.currency, sum(x.qty * o.unit_cost_cents)::bigint as cost_cents from scrap x join scrap_reasons sr on sr.id = x.reason_id join run_oee o on o.id = x.run_id where o.run_date > current_date - 28 group by o.machine, sr.name, o.currency order by cost_cents desc" }
+    ]
+  },
+  {
+    "name": "checks",
+    "title": "Production checks",
+    "subtitle": "Pre-start, CCP and weekly checks: what was done, what failed and what is due",
+    "sections": [
+      { "title": "Every check, by machine", "sql": "select machine, check_code, check_name, frequency, last_done, last_result, next_due from check_status order by machine, check_code" },
+      { "title": "Failed in the last 28 days", "sql": "select cr.done_on, m.code as machine, ct.code as check_code, cr.done_by, cr.corrective_action from check_records cr join machines m on m.id = cr.machine_id join check_types ct on ct.id = cr.check_type_id where cr.result = 'fail' and cr.done_on > current_date - 28 order by cr.done_on desc", "note": "A failed check with no corrective action written is a finding at audit. Write what was done with /checks." }
     ]
   }
 ]

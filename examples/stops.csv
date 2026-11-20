@@ -1,0 +1,5 @@
+machine,date,shift,start,minutes,reason,note
+FL-1,2026-11-02,D,10:00,30,BREAK,
+FL-1,2026-11-02,D,07:15,0:22:30,Film jam,Splice on the top web
+FL-1,2026-11-02,A,14:00,35,CHG,500g to 1kg
+FL-1,2026-11-02,A,18:10,9,,

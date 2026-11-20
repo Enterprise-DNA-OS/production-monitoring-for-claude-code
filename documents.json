@@ -1,11 +1,23 @@
 [
   {
-    "name": "example",
-    "title": "TODO(author): the first document this industry must produce",
-    "for_each": "select gen_random_uuid() as id, 'Example' as name",
-    "file": "name",
+    "name": "shift-report",
+    "title": "Shift report",
+    "for_each": "select distinct ru.run_date::text || '~' || sh.code as id, ru.run_date::text || ' ' || sh.name as label, ru.run_date, sh.starts from runs ru join shifts sh on sh.id = ru.shift_id where ru.run_date >= current_date - 2 order by ru.run_date, sh.starts",
+    "file": "label",
     "sections": [
-      { "title": "Details", "sql": "select 'replace me' as item, $1::text as record_id" }
+      { "title": "Machines", "sql": "select machine, product, crew, total_count as count, scrap as rejects, good, round(availability * 100, 1) as availability_pct, round(performance * 100, 1) as performance_pct, round(quality * 100, 1) as quality_pct, round(oee * 100, 1) as oee_pct from run_oee where run_date::text = split_part($1, '~', 1) and shift = split_part($1, '~', 2) order by machine" },
+      { "title": "Stops over 10 minutes, and stops with no reason", "sql": "select machine, starts_at, minutes, reason_name as reason, note from stop_detail where run_date::text = split_part($1, '~', 1) and shift = split_part($1, '~', 2) and kind = 'unplanned' and (minutes >= 10 or reason = '(no reason)') order by machine, starts_at" },
+      { "title": "Checks", "sql": "select m.code as machine, ct.name as check_name, cr.result, cr.done_by, cr.corrective_action from check_records cr join machines m on m.id = cr.machine_id join check_types ct on ct.id = cr.check_type_id join runs ru on ru.id = cr.run_id join shifts sh on sh.id = ru.shift_id where ru.run_date::text = split_part($1, '~', 1) and sh.code = split_part($1, '~', 2) order by m.code, ct.code" }
+    ]
+  },
+  {
+    "name": "ccp-record",
+    "title": "CCP monitoring record",
+    "for_each": "select distinct m.code || '~' || ct.code as id, m.code || ' ' || ct.code as label from check_records cr join machines m on m.id = cr.machine_id join check_types ct on ct.id = cr.check_type_id where ct.code like 'CCP%' and cr.done_on > current_date - 7 order by 2",
+    "file": "label",
+    "sections": [
+      { "title": "Check", "layout": "record", "sql": "select m.code as machine, m.name as machine_name, ct.name as check_name, ct.frequency, ct.source from machines m, check_types ct where m.code = split_part($1, '~', 1) and ct.code = split_part($1, '~', 2)" },
+      { "title": "Last 7 days", "sql": "select cr.done_on, sh.name as shift, cr.result, cr.done_by, cr.corrective_action from check_records cr join machines m on m.id = cr.machine_id join check_types ct on ct.id = cr.check_type_id left join runs ru on ru.id = cr.run_id left join shifts sh on sh.id = ru.shift_id where m.code = split_part($1, '~', 1) and ct.code = split_part($1, '~', 2) and cr.done_on > current_date - 7 order by cr.done_on, sh.starts", "note": "Signed off by: ____________________   Date: ____________" }
     ]
   }
 ]

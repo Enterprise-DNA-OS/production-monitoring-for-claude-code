@@ -1,0 +1,11 @@
+{
+  "_report": "stops",
+  "_note": "Open your Evocon downtime report, export it to Excel, save it as CSV, then put the CSV's own column names on the right. Reason names must match a code or name in `npm run production -- reasons`.",
+  "machine": "Station",
+  "date": "Date",
+  "shift": "Shift",
+  "start": "Start time",
+  "minutes": "Duration",
+  "reason": "Reason",
+  "note": "Comment"
+}

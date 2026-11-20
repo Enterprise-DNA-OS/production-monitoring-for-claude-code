@@ -1,0 +1,10 @@
+{
+  "_report": "runs",
+  "_note": "One row per station, date and shift with the total count. Save the Evocon quantities report as CSV and name its columns here.",
+  "machine": "Station",
+  "date": "Date",
+  "shift": "Shift",
+  "product": "Product",
+  "total_count": "Total quantity",
+  "crew": "Operator"
+}
